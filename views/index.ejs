@@ -24,7 +24,7 @@
           <p class="text-white">Website code design stolen from <u><a style="color: inherit;"
                 href="https://ruqqus-auth.glitch.me/">Ruqqus-Auth</a></u> by Panjkrc</p>
           <a href="#getStarted" class="btn btn-primary">Get Started</a>
-          <a href="https://ruqqus.com/+RuqqusAPI" class="btn btn-secondary">Join +RuqqusAPI</a>
+          <a href="https://darkan.org/" class="btn btn-secondary">Play Darkan</a>
         </div>
     </div>
     </div>
@@ -43,15 +43,39 @@
         <div class="container pt-5">
           <div class="row">
             <div class="col-12 card automatic" id="getStarted">
-              <h3>Random Players From Hiscores</h3>
+              <h3>Current Goal</h3>
+              <hr>
+              <div id="currentGoal">
+                None!
+              </div>
+            </div>
+
+            <div class="col-12 card automatic" id="getStarted">
+              <h3>Random Stats</h3>
               <hr>
               <div id="output">
 
               </div>
             </div>
+            <div class="col-12 card automatic" id="getStarted">
+              <h3>Completed Goals</h3>
+              <hr>
+              <div id="currentGoal">
+                None!
+              </div>
+            </div>
+            
           </div>
 
           <script>
+            const interestedStats = [
+              "Yew logs chopped",
+              "Maple logs chopped",
+              "Willow logs chopped",
+              "Oak logs chopped",
+              "Logs chopped",
+            ];
+
             function darkanAPI(url) {
               return new Promise((res, rej) => {
                 let xhr = new XMLHttpRequest();
@@ -67,11 +91,27 @@
               });
             }
 
-            function getUsernames(skill, page) {
+            function getUsernames(pages) {
+              let promises = [];
+              for (let i = 0; i < pages; i++) {
+                promises.push(new Promise(res => {
+                  darkanAPI(`https://darkan.org/api/highscores?page=${i}`).then(hiscores => {
+                    res(hiscores.map(h => h.username));
+                  });
+                }));
+              }
+
               return new Promise(res => {
-                darkanAPI(`https://darkan.org/api/highscores?page=${page}&skill=${skill}`).then(hiscores => {
-                  res(hiscores.map(h => h.username));
+                usernamesArray = [];
+
+                Promise.all(promises).then(usernames => {
+                  usernames.forEach(batchUsernames => {
+                    usernamesArray.push(...batchUsernames);
+                  });
+
+                  res(usernamesArray);
                 });
+
               });
             }
 
@@ -84,9 +124,9 @@
             }
 
             let totalChopped = {};
-            getUsernames("Woodcutting", 0).then(usernames => usernames.forEach(username => getCount(username).then(counts => {
+            getUsernames(10).then(usernames => usernames.forEach(username => getCount(username).then(counts => {
               for (count in counts) {
-                if (count.includes("chopped")) {
+                if (interestedStats.includes(count)) {
                   if (!totalChopped[count]) totalChopped[count] = 0;
                   totalChopped[count] += counts[count];
                 }
