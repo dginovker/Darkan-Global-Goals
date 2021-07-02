@@ -5,117 +5,104 @@
 <%- include('partials/head'); -%>
 
 
-<header>
-	<div class="container">
-		<%- include('partials/front_nav'); -%>
-		<div class="jumbotron front text-center"></div>
-		<div class="container">
-			<h1 class="display-3 text-white" style="font-family: 'Inter', sans-serif;">
-				Rainbow Comments
-				<br>
-				for
-				<br>
-				Ruqqus
-			</h1>
-			<br>
-			<hr>
-			<br>
-			<p class="text-white">A simple way to make rainbow comments for <strong>Ruqqus</strong></p>
-			<p class="text-white">Website code design stolen from <u><a style="color: inherit;" href="https://ruqqus-auth.glitch.me/">Ruqqus-Auth</a></u> by Panjkrc</p>
-			<a href="#getStarted" class="btn btn-primary">Get Started</a>
-			<a href="https://ruqqus.com/+RuqqusAPI" class="btn btn-secondary">Join +RuqqusAPI</a>
-		</div>
-	</div>
-	</div>
-</header>
-<!DOCTYPE html>
-<html lang="en">
+  <header>
+    <div class="container">
+      <%- include('partials/front_nav'); -%>
+        <div class="jumbotron front text-center"></div>
+        <div class="container">
+          <h1 class="display-3 text-white" style="font-family: 'Inter', sans-serif;">
+            Goals
+            <br>
+            for
+            <br>
+            Darkan
+          </h1>
+          <br>
+          <hr>
+          <br>
+          <p class="text-white">Work together to complete goals on <strong>Darkan</strong></p>
+          <p class="text-white">Website code design stolen from <u><a style="color: inherit;"
+                href="https://ruqqus-auth.glitch.me/">Ruqqus-Auth</a></u> by Panjkrc</p>
+          <a href="#getStarted" class="btn btn-primary">Get Started</a>
+          <a href="https://ruqqus.com/+RuqqusAPI" class="btn btn-secondary">Join +RuqqusAPI</a>
+        </div>
+    </div>
+    </div>
+  </header>
+  <!DOCTYPE html>
+  <html lang="en">
 
 
-<%- include('partials/head'); -%>
+  <%- include('partials/head'); -%>
 
 
 
-<body>
+    <body>
 
-	<main>
-		<div class="container pt-5">
-			<div class="row">
-				<div class="col-12 card automatic" id="getStarted">
-					<h3>Rainbowify Your Posts</h3>
+      <main>
+        <div class="container pt-5">
+          <div class="row">
+            <div class="col-12 card automatic" id="getStarted">
+              <h3>Random Players From Hiscores</h3>
+              <hr>
+              <div id="output">
 
-					<form onsubmit="event.preventDefault();">
-						<div class="form-group">
-							<label for="comment">Your comment</label>
-							<input type="text" class="form-control" id="comment" name="comment"
-								aria-describedby="comment_help" placeholder="I love Linux!" required>
-						</div>
+              </div>
+            </div>
+          </div>
 
-						<div class="custom-control custom-checkbox">
-							<input type="checkbox" class="custom-control-input" id="waveify" name="waveify" >
-							<label class="custom-control-label" for="waveify">Add wave <small>(doesn't work right now)</small></label>
+          <script>
+            function darkanAPI(url) {
+              return new Promise((res, rej) => {
+                let xhr = new XMLHttpRequest();
+                xhr.open("GET", url);
+                xhr.setRequestHeader("accept", "*/*");
 
-						</div>
-						<br>
-						<script>							
-							function rainbowify(){
-								const colors = ['#eb4034', '#eb8f34', '#b1eb34', '#34eb40', '#34b1eb', '#345feb', '#9334eb', '#eb3493'];
-								let index = 0;
+                xhr.onreadystatechange = function () {
+                  if (xhr.readyState === 4) {
+                    res(JSON.parse(xhr.responseText));
+                  }
+                };
+                xhr.send();
+              });
+            }
 
-								function rainbowLetter(letter) {
-									return `<span style="color: ${colors[index++ % colors.length]}">${letter}</span>`;
-								};
+            function getUsernames(skill, page) {
+              return new Promise(res => {
+                darkanAPI(`https://darkan.org/api/highscores?page=${page}&skill=${skill}`).then(hiscores => {
+                  res(hiscores.map(h => h.username));
+                });
+              });
+            }
 
-								let output = '';
-								document.getElementById("comment").value.split('').forEach(l => {
-									output += rainbowLetter(l);
-								});
+            function getCount(player) {
+              return new Promise(res => {
+                darkanAPI(`https://darkan.org/api/player/${player}/count`).then(counts => {
+                  res(counts);
+                });
+              });
+            }
 
-								document.getElementById("output").innerText = output;
+            let totalChopped = {};
+            getUsernames("Woodcutting", 0).then(usernames => usernames.forEach(username => getCount(username).then(counts => {
+              for (count in counts) {
+                if (count.includes("chopped")) {
+                  if (!totalChopped[count]) totalChopped[count] = 0;
+                  totalChopped[count] += counts[count];
+                }
+              }
+              let output = "";
+              for (row in totalChopped) {
+                output += `${row}\t${totalChopped[row]}<br>`;
+              }
+              document.getElementById("output").innerHTML = output;
+            })));
+          </script>
 
-								copyOutputToClipboard();
-							}
+          <%- include('partials/copied'); -%>
+      </main>
+    </body>
 
-							function copyOutputToClipboard() {
-								var selection = window.getSelection();
-								
-								var range = document.createRange();
-								range.selectNodeContents(document.getElementById("output"));
-								selection.removeAllRanges();
-								selection.addRange(range);
-								document.execCommand("Copy");
-								
-								document.getElementById("copiedToClipboardFeedback").style.visibility = "visible";
-								selection.removeAllRanges();
+    <%- include('partials/footer'); -%>
 
-								document.getElementById("waveify").focus();
-							
-								setTimeout((function(){
-									document.getElementById("comment").focus();
-								}),10)
-							}
-						</script> 
-
-						<button type="submit" class="btn btn-primary" onclick="rainbowify()">Submit</button>
-					</form>
-
-					<div id="copiedToClipboardFeedback" style="visibility:hidden;">
-						<br>
-						(Text automagically copied to clipboard!)
-					</div>
-					<hr>
-					<code>
-						<div id="output">
-						
-						</div>	
-					</code>
-				</div>
-			</div>
-
-			<%- include('partials/copied'); -%>
-	</main>
-</body>
-
-<%- include('partials/footer'); -%>
-
-</html>
+  </html>
